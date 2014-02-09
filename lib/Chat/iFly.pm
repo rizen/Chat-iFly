@@ -301,6 +301,15 @@ sub render_html {
 
 sub render_ajax {
     my ($self, $user) = @_;
+    #my %defaults = (
+    #    name                => undef,
+    #    id                  => 0,
+    #    avatar_url          => JSON::false,
+    #    is_admin            => JSON::false,
+    #    relationships_set   => JSON::false,
+    #    upl                 => JSON::false,
+    #);
+    return to_json($self->get_key($user));
 }
 
 sub init {
@@ -447,7 +456,7 @@ sub get_key {
     my $result = $self->post('/p/', {
         api_key         => $self->api_key,
         uname           => $user->{name},
-        uid             => $user->{id},
+        uid             => $user->{id} || 0,
         image_path      => $self->static_asset_base_uri.'/themes/light/images',
         isLog           => JSON::true,
         whichTheme      => 'blue',
@@ -456,10 +465,10 @@ sub get_key {
         validState      => ['available','offline','busy','idle'],
         up              => (exists $user->{avatar_uri}) ? $user->{avatar_uri} : $self->static_asset_base_uri.'/themes/light/images/default_avatar.png',
         upl             => (exists $user->{profile_uri}) ? $user->{profile_uri} : '#',
-        rel             => (exists $user->{relationships_set}) ? 1 : 0,
+        rel             => (exists $user->{relationships_set}) ? 1 : undef,
         valid_uids      => $user->{relationships_set},
     });
-    $result->{uid} = $user->{id};
+    $result->{uid} = $user->{id} || 0;
     $result->{name} = $user->{name};
     return $result;
 }

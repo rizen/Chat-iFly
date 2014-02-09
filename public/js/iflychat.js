@@ -6,7 +6,7 @@ b.urls[0]){l("css");break}h+=1;b&&(h<200?setTimeout(t,50):l("css"))}}var c,s,m={
   $(document).ready(function(){
     $.post(Drupal.settings.drupalchat.exurl, function(data) {
       if(data) {
-	    data = JSON.parse(data);
+	 //   data = JSON.parse(data);
 	    if(data && (typeof data.css != "undefined") && (typeof data.key != "undefined")) {
 		LazyLoad.css(Drupal.settings.drupalchat.external_a_host + ':' + Drupal.settings.drupalchat.external_a_port + '/i/' + data.css + '/cache.css', function () {
 		  Drupal.settings.drupalchat.session_key = data.key;

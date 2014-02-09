@@ -16,13 +16,17 @@ isa_ok($chat, 'Chat::iFly');
 
 is $chat->init()->{drupalchat}{exurl}, '/path/to/ajax/method', 'generate settings';
 
-say $chat->render_html();
+ok($chat->render_html =~ m{"exurl":"/path/to/ajax/method"}, 'generate html to embed in page');
 
 ok($chat->fetch_anonymous_name, 'fetch anonymous name');
 
 my $anonymous_user = $chat->generate_anonymous_user;
 ok($anonymous_user->{id} =~ m/^0-\d+$/, '0-00000 to represent anonymous ids');
 ok($anonymous_user->{name} =~ m/^Guest\s\w+$/, 'Guest Name to represent anonymous names');
+
+my $user_id = $anonymous_user->{id};
+ok($chat->render_ajax($anonymous_user) =~ m/$user_id/, 'generate ajax response');
+say $chat->render_ajax();
 
 my $key = $chat->get_key($anonymous_user);
 ok(exists $key->{key}, 'fetch a key');
