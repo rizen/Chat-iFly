@@ -9,34 +9,35 @@ use URI;
 use Ouch;
 use Moo;
 
-has api_key => (
-    is          => 'rw',
-    required    => 1,
-);
-
 
 
 =head1 NAME
 
-Wing::Client - A simple client to Wing's web services.
+Chat::iFly - An interface to the iFlyChat service.
 
 =head1 SYNOPSIS
 
- use Wing::Client;
-
- my $wing = Wing::Client->new(uri => 'https://www.thegamecrafter.com');
-
- my $game = $wing->get('game/528F18A2-F2C4-11E1-991D-40A48889CD00');
+ use Chat::iFly;
  
- my $session = $wing->post('session', { username => 'me', password => '123qwe', api_key_id => 'abcdefghijklmnopqrztuz' });
+ my $chat = Chat::iFly->new(
+    api_key                 => 'afsdadfafdsadfsafsd',
+    static_asset_base_uri   => '//www.myserver.com/ifly',
+    ajax_uri                => '//www.myserver.com/chat/login'
+ );
+ 
+ my $html_to_inline_into_page = $chat->render_html;
+ 
+ my $response_to_chat_login = $chat->render_ajax({
+    id          => 4321,
+    name        => 'Joe Blow',
+    avatar_uri  => '//www.myserver.com/uploads/joe.blow.avatar.jpg',
+    profile_uri => '//www.myserver.com/users/4321',
+ });
 
- $game = $wing->put('game/528F18A2-F2C4-11E1-991D-40A48889CD00', { session_id => $session->{id}, name => 'Lacuna Expanse' });
-
- my $status = $wing->delete('game/528F18A2-F2C4-11E1-991D-40A48889CD00', { session_id => $session->{id} });
 
 =head1 DESCRIPTION
 
-A light-weight wrapper for Wing's (L<https://github.com/plainblack/Wing>) RESTful API (an example of which can be found at: L<https://www.thegamecrafter.com/developer/>). This wrapper basically hides the request cycle from you so that you can get down to the business of using the API. It doesn't attempt to manage the data structures or objects the web service interfaces with.
+A wrapper needed to authenticate to L<iflychat.com>.
 
 =head1 METHODS
 
@@ -54,13 +55,38 @@ A hash of parameters.
 
 =over
 
+=item api_key
+
+Required. The key generated on the iFly Chat Dashboard.
+
+=cut
+
+has api_key => (
+    is          => 'rw',
+    required    => 1,
+);
+
+=item static_asset_base_uri
+
+The URL where you have installed the static files found in the C<public> folder of the L<Chat::iFly> github repository.
+
+=cut
+
+has static_asset_base_uri => (
+    is          => 'rw',
+    required    => 1,
+);
+
+has ajax_uri => (
+    is          => 'rw',
+    required    => 1,
+);
+
+
+
 =item uri
 
 The base URI of the service you're interacting with. Defaults to C<https://api.iflychat.com>.
-
-=back
-
-=back
 
 =cut
 
@@ -68,6 +94,12 @@ has uri => (
     is          => 'rw',
     default     => sub { 'https://api.iflychat.com' },
 );
+
+=item port
+
+The port you're interacting with for iFly. Defaults to C<443>.
+
+=cut
 
 has port => (
     is          => 'rw',
@@ -78,8 +110,6 @@ has port => (
 =item agent
 
 A HTTP::Thin object.
-
-=back
 
 =back
 
@@ -97,15 +127,6 @@ sub _build_agent {
 }
 
 
-has static_asset_base_uri => (
-    is          => 'rw',
-    required    => 1,
-);
-
-has ajax_uri => (
-    is          => 'rw',
-    required    => 1,
-);
 
 has enable_chatroom => (
     is          => 'rw',
@@ -345,7 +366,7 @@ sub init {
         external_host           => $self->uri,
         external_port           => $self->port,
         external_a_host         => $self->uri,
-        extrenal_a_port         => $self->port,
+        external_a_port         => $self->port,
         upl                     => '#',
     );
     
@@ -379,10 +400,7 @@ sub generate_anonymous_user {
 
 sub fetch_anonymous_name {
     my $self = shift;
-    my $response = $self->agent->request(GET $self->_create_uri('/anam/v/usa'));
-    if ($response->is_success) {
-        return $response->decoded_content;
-    }
+    return $self->get('/anam/v/usa');
 }
 
 
@@ -453,7 +471,7 @@ This allows you to set up buddy lists within the chat. It is a hash reference ta
 
 sub get_key {
     my ($self, $user) = @_;
-    my $result = $self->post('/p/', {
+    my $result = from_json($self->post('/p/', {
         api_key         => $self->api_key,
         uname           => $user->{name},
         uid             => $user->{id} || 0,
@@ -467,7 +485,7 @@ sub get_key {
         upl             => (exists $user->{profile_uri}) ? $user->{profile_uri} : '#',
         rel             => (exists $user->{relationships_set}) ? 1 : undef,
         valid_uids      => $user->{relationships_set},
-    });
+    }));
     $result->{uid} = $user->{id} || 0;
     $result->{name} = $user->{name};
     return $result;
@@ -533,7 +551,7 @@ Performs a C<GET> request, which is used for reading data from the service.
 
 =item path
 
-The path to the REST interface you wish to call. You can abbreviate and leave off the C</api/> part if you wish.
+The path to the REST interface you wish to call. 
 
 =item params
 
@@ -550,53 +568,6 @@ sub get {
     return $self->_process_request( GET $uri );
 }
 
-=head2 delete(path, params)
-
-Performs a C<DELETE> request, deleting data from the service.
-
-=over
-
-=item path
-
-The path to the REST interface you wish to call. You can abbreviate and leave off the C</api/> part if you wish.
-
-=item params
-
-A hash reference of parameters you wish to pass to the web service.
-
-=back
-
-=cut
-
-sub delete {
-    my ($self, $path, $params) = @_;
-    my $uri = $self->_create_uri($path);
-    return $self->_process_request(POST $uri->as_string, $params, 'X-HTTP-Method' => 'DELETE', Content_Type => 'form-data', Content => $params );
-}
-
-=head2 put(path, params)
-
-Performs a C<PUT> request, which is used for updating data in the service.
-
-=over
-
-=item path
-
-The path to the REST interface you wish to call. You can abbreviate and leave off the C</api/> part if you wish.
-
-=item params
-
-A hash reference of parameters you wish to pass to the web service.
-
-=back
-
-=cut
-
-sub put {
-    my ($self, $path, $params) = @_;
-    my $uri = $self->_create_uri($path);
-    return $self->_process_request( POST $uri->as_string, 'X-HTTP-Method' => 'PUT', Content_Type => 'form-data', Content => $params,);
-}
 
 =head2 post(path, params)
 
@@ -606,7 +577,7 @@ Performs a C<POST> request, which is used for creating data in the service.
 
 =item path
 
-The path to the REST interface you wish to call. You can abbreviate and leave off the C</api/> part if you wish.
+The path to the REST interface you wish to call. 
 
 =item params
 
@@ -637,13 +608,7 @@ sub _process_response {
     my $self = shift;
     my $response = shift;
     if ($response->is_success) {
-        my $result = eval { from_json($response->decoded_content) }; 
-        if ($@) {
-            ouch 500, 'Server returned unparsable content.', { error => $@, content => $response->decoded_content };
-        }
-        else {
-            return $result;
-        }
+        return $response->decoded_content;
     }
     else {
         warn $response->decoded_content;
