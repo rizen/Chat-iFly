@@ -24,3 +24,4 @@ You'll need to set up an ajax method in your app that returns the result of C<re
 
 And finally you need to call C<update_settings> to tell the iFly servers what your settings are. 
 
+=cut
