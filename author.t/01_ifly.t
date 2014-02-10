@@ -26,7 +26,6 @@ ok($anonymous_user->{name} =~ m/^Guest\s\w+$/, 'Guest Name to represent anonymou
 
 my $user_id = $anonymous_user->{id};
 ok($chat->render_ajax($anonymous_user) =~ m/$user_id/, 'generate ajax response');
-say $chat->render_ajax();
 
 my $key = $chat->get_key($anonymous_user);
 ok(exists $key->{key}, 'fetch a key');
