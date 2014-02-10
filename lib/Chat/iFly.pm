@@ -501,7 +501,7 @@ has use_local_anonymous_names => (
 
 =item local_anonymous_names
 
-An array refernece of local names. There's a default list of 50 or so English sounding names. For use with C<use_local_anonymous_names>.
+An array reference of local names. There's a default list of 50 or so English sounding names. For use with C<use_local_anonymous_names>.
 
 =cut
 
