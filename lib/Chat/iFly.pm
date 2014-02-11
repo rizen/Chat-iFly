@@ -814,7 +814,6 @@ sub init {
         basePath                => '/',
         admin                   => (defined $user && exists $user->{is_admin} && $user->{is_admin}) ? "1" : "0",
         session_key             => '',
-        up                      => (defined $user && exists $user->{avatar_uri}) ? $user->{avatar_uri} : $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_avatar.png',
         exurl                   => $self->ajax_uri,
         external_host           => $self->uri,
         external_port           => $self->port,
@@ -822,6 +821,12 @@ sub init {
         external_a_port         => $self->port,
         upl                     => (defined $user && exists $user->{profile_uri} && $user->{profile_uri}) ? $user->{profile_uri} : '#',
     );
+    
+    if ($self->user_picture) {
+        $settings{default_up} = $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_avatar.png';
+        $settings{up} = (defined $user && exists $user->{avatar_uri}) ? $user->{avatar_uri} : $settings{default_up};
+        $settings{default_cr} = $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_room.png';
+    }
     
     if ($self->show_admin_list) {
         $settings{text_support_chat_init_label} = $self->support_chat_init_label;
@@ -842,11 +847,6 @@ sub init {
         $settings{stopWordList} = $self->stop_word_list;
     }
 
-    if ($self->user_picture) {
-        $settings{up} = $settings{default_up} = $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_avatar.png';
-        $settings{default_cr} = $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_room.png';
-    }
-    
     return { drupalchat => \%settings };
 }
 
