@@ -9,7 +9,7 @@ use URI;
 use Ouch;
 use Moo;
 
-
+my $convert_to_string = sub { "$_[0]" };
 
 =head1 NAME
 
@@ -25,14 +25,15 @@ Chat::iFly - An interface to the iFlyChat service.
     ajax_uri                => '//www.myserver.com/chat/login'
  );
  
- my $html_to_inline_into_page = $chat->render_html;
- 
- my $response_to_chat_login = $chat->render_ajax({
+ my $user = {
     id          => 4321,
     name        => 'Joe Blow',
     avatar_uri  => '//www.myserver.com/uploads/joe.blow.avatar.jpg',
     profile_uri => '//www.myserver.com/users/4321',
- });
+ };
+ 
+ my $html_to_inline_into_page = $chat->render_html($user); 
+ my $response_to_chat_login = $chat->render_ajax($user);
 
 
 =head1 DESCRIPTION
@@ -119,7 +120,8 @@ Defaults to C<2>. Must be 1 or 2. Minimize online user list by default. 1 means 
 
 has minimize_chat_user_list => (
     is          => 'rw',
-    default     => sub { 2 },
+    default     => sub { '2' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'minimize_chat_user_list must be 1 or 2', 'minimize_chat_user_list') unless ($_[0] ~~ [1,2]);
     }
@@ -133,7 +135,8 @@ Defaults to C<1>. Must be 1 or 2. Show search bar in online user list. 1 means Y
 
 has enable_search_bar => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'enable_search_bar must be 1 or 2', 'enable_search_bar') unless ($_[0] ~~ [1,2]);
     }
@@ -235,7 +238,8 @@ Defaults to 1. Must be 1 or 2. 1 means that the auto greeting is enabled.
 
 has support_chat_auto_greet_enable => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'support_chat_auto_greet_enable must be 1 or 2', 'support_chat_auto_greet_enable') unless ($_[0] ~~ [1,2]);
     }
@@ -261,7 +265,8 @@ Defaults to 1. The delay, in seconds, after which the first time visitors will b
 
 has support_chat_auto_greet_time => (
     is          => 'rw',
-    default     => sub { 1 },
+    coerce      => $convert_to_string,
+    default     => sub { '1' },
 );
 
 =item support_chat_init_label_off
@@ -382,7 +387,8 @@ Defaults to 1. Must be 1 or 2. 1 means that the public chatroom is enabled.
 
 has enable_chatroom => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'enable_chatroom must be 1 or 2', 'enable_chatroom') unless ($_[0] ~~ [1,2]);
     }
@@ -407,7 +413,8 @@ Defaults to 1. Must be 1 or 2. When set to 1 the chat will play a notification s
 
 has notification_sound => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'notification_sound must be 1 or 2', 'notification_sound') unless ($_[0] ~~ [1,2]);
     }
@@ -445,7 +452,8 @@ Defaults to 1. Must be 1 or 2. When set to 1 users will have access to emoticons
 
 has enable_smiley => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'enable_smiley must be 1 or 2', 'enable_smiley') unless ($_[0] ~~ [1,2]);
     }
@@ -471,7 +479,8 @@ Defaults to 1. Must be 1 or 2. When set to 1 chat messages will be logged to the
 
 has log_messages => (
     is          => 'rw',
-    default     => sub { 1 },
+    coerce      => $convert_to_string,
+    default     => sub { '1' },
     isa         => sub {
         ouch(442, 'log_messages must be 1 or 2', 'log_messages') unless ($_[0] ~~ [1,2]);
     }
@@ -490,7 +499,7 @@ has anon_prefix => (
 
 =item use_local_anonymous_names
 
-Defaults to 1. Must be 1 or 0. When set to 1 guest names will be pulled from C<local_anonymous_names>, which is faster than consulting the remote server. When set to 0 a list of names will be polled from the iFly server.
+Perl boolean. When true guest names will be pulled from C<local_anonymous_names>, which is faster than consulting the remote server. When false a list of names will be polled from the iFly server.
 
 =cut
 
@@ -519,7 +528,8 @@ Defaults to 1. Must be 1. Whether to use C<stop_word_list> to filter user posts.
 
 has use_stop_word_list => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'use_stop_word_list must be 1, 2, 3 or 4', 'use_stop_word_list') unless ($_[0] ~~ [1,2,3,4]);
     }
@@ -544,7 +554,8 @@ Defaults to 1. Must be 1, 2, 3, or 4. 1 means don't block links. 2 means block i
 
 has stop_links => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'stop_links must be 1, 2, 3, or 4', 'stop_links') unless ($_[0] ~~ [1,2,3,4]);
     }
@@ -558,7 +569,8 @@ Defaults to 2. Must be 1 or 2. 1 means apply C<stop_links> only to anonymous use
 
 has allow_anon_links => (
     is          => 'rw',
-    default     => sub { 2 },
+    default     => sub { '2' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'allow_anon_links must be 1 or 2', 'allow_anon_links') unless ($_[0] ~~ [1,2]);
     }
@@ -572,7 +584,8 @@ Defaults to 1. Must be 1 or 2. When set to 1 images and video links will be rend
 
 has allow_render_images => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'allow_render_images must be 1 or 2', 'allow_render_images') unless ($_[0] ~~ [1,2]);
     }
@@ -586,7 +599,8 @@ Defaults to 1. Must be 1 or 2. When set to 1 users can set their name color.
 
 has allow_user_font_color => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'allow_user_font_color must be 1 or 2', 'allow_user_font_color') unless ($_[0] ~~ [1,2]);
     }
@@ -600,7 +614,8 @@ Defaults to 1. Must be 1, 2, or 3. Allow users to delete messages selectively wh
 
 has allow_single_message_delete => (
     is          => 'rw',
-    default     => sub { 2 },
+    default     => sub { '2' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'allow_single_message_delete must be 1, 2, or 3', 'allow_single_message_delete') unless ($_[0] ~~ [1,2,3]);
     }
@@ -614,7 +629,8 @@ Defaults to 1. Must be 1, 2, or 3. Allow users to clear all messages in a room. 
 
 has allow_clear_room_history => (
     is          => 'rw',
-    default     => sub { 2 },
+    default     => sub { '2' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'allow_clear_room_history must be 1, 2, or 3', 'allow_clear_room_history') unless ($_[0] ~~ [1,2,3]);
     }
@@ -628,7 +644,8 @@ Defaults to 2. Must be 1 or 2. When set to 2 the chat will be in "Community" mod
 
 has show_admin_list => (
     is          => 'rw',
-    default     => sub { 2 },
+    default     => sub { '2' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'show_admin_list must be 1 or 2', 'show_admin_list') unless ($_[0] ~~ [1,2]);
     }
@@ -642,7 +659,8 @@ Defaults to 1. Must be 1 or 2. 1 means to enable user avatars.
 
 has user_picture => (
     is          => 'rw',
-    default     => sub { 1 },
+    default     => sub { '1' },
+    coerce      => $convert_to_string,
     isa         => sub {
         ouch(442, 'user_picture must be 1 or 2', 'user_picture') unless ($_[0] ~~ [1,2]);
     }
@@ -680,7 +698,8 @@ The port you're interacting with for iFly. Defaults to C<443>.
 
 has port => (
     is          => 'rw',
-    default     => sub { 443 },
+    default     => sub { '443' },
+    coerce      => $convert_to_string,
 );
 
 =item agent
@@ -703,15 +722,23 @@ sub _build_agent {
 }
 
 
-=head2 render_html( )
+=head2 render_html( user )
 
 This method renders the HTML you need to inline into your web page to configure the chat.
+
+=over
+
+=item user
+
+A hash reference containing a user as defined in C<get_key>. However, you only need to pass this in if the user is registered with the site, not for anonymous users.
+
+=back
 
 =cut
 
 sub render_html {
-    my ($self) = @_;
-    my $out = '<script type="text/javascript">Drupal={};Drupal.settings={};Drupal.settings.drupalchat={};Drupal.settings='.to_json($self->init()).';</script>';
+    my ($self, $user) = @_;
+    my $out = '<script type="text/javascript">Drupal={};Drupal.settings={};Drupal.settings.drupalchat={};Drupal.settings='.to_json($self->init($user)).';</script>';
     $out .= '<script type="text/javascript" src="' . $self->static_asset_base_uri .  '/js/ba-emotify.js"></script>';
     $out .= '<script type="text/javascript" src="' . $self->static_asset_base_uri .  '/js/jquery.titlealert.min.js"></script>';
     $out .= '<script type="text/javascript" src="' . $self->static_asset_base_uri .  '/js/iflychat.js"></script>';
@@ -740,23 +767,31 @@ sub render_ajax {
     return to_json({(%{$user}, %{$self->get_key($user)})});
 }
 
-=head2 init()
+=head2 init( user )
 
 This method is called by C<render_html> to generate the list of settings to initialize the chat. There should proably not be a reason for you to call it yourself.
+
+=over
+
+=item user
+
+A hash reference containing a user as defined in C<get_key>. However, you only need to pass this in if the user is registered with the site, not for anonymous users.
+
+=back
 
 =cut
 
 sub init {
-    my $self = shift;
+    my ($self, $user) = @_;
     my %settings = (
-        username                => '',
-        uid                     => '',
+        username                => (defined $user && exists $user->{name} && $user->{name}) ? $user->{name} : '',
+        uid                     => (defined $user && exists $user->{id} && $user->{id}) ? $user->{id} : '',
         current_timestamp       => time(),
-        polling_method          => 3,
+        polling_method          => "3",
         pollUrl                 => ' ',
         sendUrl                 => ' ',
         statusUrl               => ' ',
-        status                  => 1,
+        status                  => "1",
         goOnline                => $self->go_online_label,
         goIdle                  => $self->go_idle_label,
         newMessage              => $self->new_message_label,
@@ -777,14 +812,15 @@ sub init {
         searchBar               => $self->enable_search_bar,        
         notificationSound       => $self->notification_sound,
         basePath                => '/',
-        admin                   => 0,
+        admin                   => (defined $user && exists $user->{is_admin} && $user->{is_admin}) ? "1" : "0",
         session_key             => '',
+        up                      => (defined $user && exists $user->{avatar_uri}) ? $user->{avatar_uri} : $self->static_asset_base_uri.'/themes/'.$self->theme.'/images/default_avatar.png',
         exurl                   => $self->ajax_uri,
         external_host           => $self->uri,
         external_port           => $self->port,
         external_a_host         => $self->uri,
         external_a_port         => $self->port,
-        upl                     => '#',
+        upl                     => (defined $user && exists $user->{profile_uri} && $user->{profile_uri}) ? $user->{profile_uri} : '#',
     );
     
     if ($self->show_admin_list) {
